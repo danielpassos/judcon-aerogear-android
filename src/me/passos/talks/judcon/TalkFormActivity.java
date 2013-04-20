@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 import org.jboss.aerogear.android.Callback;
 import org.jboss.aerogear.android.pipeline.AbstractActivityCallback;
+import org.jboss.aerogear.android.pipeline.LoaderPipe;
 
 public class TalkFormActivity extends Activity {
 
@@ -41,7 +42,18 @@ public class TalkFormActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Talk talk = new Talk(title.getText().toString());
+                LoaderPipe<Talk> pipe = talkApplication.getPipe(TalkFormActivity.this);
+                pipe.save(talk, new Callback<Talk>() {
+                    @Override
+                    public void onSuccess(Talk data) {
+                        TalkFormActivity.this.finish();
+                    }
 
+                    @Override
+                    public void onFailure(Exception e) {
+                        TalkFormActivity.this.finish();
+                    }
+                });
             }
         });
 

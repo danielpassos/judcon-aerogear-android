@@ -14,6 +14,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 import org.jboss.aerogear.android.Callback;
 import org.jboss.aerogear.android.pipeline.AbstractActivityCallback;
+import org.jboss.aerogear.android.pipeline.LoaderPipe;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,10 +82,21 @@ public class TalkListActivity extends ListActivity {
 
     private void listTalksOnDevice() {
 
-        List<Talk> allTalks = new ArrayList<Talk>();
-        ArrayAdapter adapter = new ArrayAdapter(TalkListActivity.this, android.R.layout.simple_list_item_1, allTalks);
-        listView.setAdapter(adapter);
+        LoaderPipe<Talk> pipe = talkApplication.getPipe(this);
+        pipe.read(new Callback<List<Talk>>() {
+            @Override
+            public void onSuccess(List<Talk> data) {
+                List<Talk> allTalks = new ArrayList<Talk>(data);
+                ArrayAdapter adapter = new ArrayAdapter(TalkListActivity.this, android.R.layout.simple_list_item_1, allTalks);
+                listView.setAdapter(adapter);
+            }
 
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(TalkListActivity.this, "Ops, We have a problem", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        });
     }
 
     private void showDeleteConfirmation(final Talk talk) {
@@ -94,7 +106,18 @@ public class TalkListActivity extends ListActivity {
                     new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            LoaderPipe<Talk> pipe = talkApplication.getPipe(TalkListActivity.this);
+                            pipe.remove(String.valueOf(talk.getId()), new Callback<Void>() {
+                                @Override
+                                public void onSuccess(Void data) {
+                                    listTalksOnDevice();
+                                }
 
+                                @Override
+                                public void onFailure(Exception e) {
+
+                                }
+                            });
                         }
                     }).setNegativeButton("Cancel", null)
             .show();
